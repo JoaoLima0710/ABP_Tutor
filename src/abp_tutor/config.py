@@ -7,6 +7,7 @@ from __future__ import annotations
 import zoneinfo
 from datetime import date
 from functools import lru_cache
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -41,6 +42,13 @@ class Settings(BaseSettings):
 
     # ── Logging ──
     LOG_LEVEL: str = "INFO"
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _strip_strings(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return v.strip()
+        return v
 
     # ── Derived ──
     @field_validator("TIMEZONE")
