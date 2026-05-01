@@ -9,7 +9,6 @@ if sys.platform == "win32":
     except AttributeError:
         pass
 
-
 # Tentativa de importação das bibliotecas de extração
 try:
     import fitz  # PyMuPDF
@@ -27,9 +26,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def extract_text_from_pdf(path: str) -> str:
     if not fitz:
-        raise ImportError("Biblioteca 'pymupdf' não encontrada. Instale com 'pip install pymupdf'")
+        raise ImportError("Biblioteca 'pymupdf' nao encontrada. Instale com 'pip install pymupdf'")
     
     text = ""
     with fitz.open(path) as doc:
@@ -37,9 +37,10 @@ def extract_text_from_pdf(path: str) -> str:
             text += page.get_text() + "\n"
     return text
 
+
 def extract_text_from_pptx(path: str) -> str:
     if not Presentation:
-        raise ImportError("Biblioteca 'python-pptx' não encontrada. Instale com 'pip install python-pptx'")
+        raise ImportError("Biblioteca 'python-pptx' nao encontrada. Instale com 'pip install python-pptx'")
     
     prs = Presentation(path)
     text_runs = []
@@ -48,6 +49,7 @@ def extract_text_from_pptx(path: str) -> str:
             if hasattr(shape, "text"):
                 text_runs.append(shape.text)
     return "\n".join(text_runs)
+
 
 def extract_text(file_path: str) -> str:
     ext = Path(file_path).suffix.lower()
@@ -60,12 +62,15 @@ def extract_text(file_path: str) -> str:
     elif ext == ".pptx":
         return extract_text_from_pptx(file_path)
     else:
-        raise ValueError(f"Extensão de arquivo não suportada: {ext}")
+        raise ValueError(f"Extensao de arquivo nao suportada: {ext}")
+
 
 def upload_material(topic: str, file_path: str):
     if not os.path.exists(file_path):
-        print(f"Erro: Arquivo não encontrado: {file_path}")
+        print(f"Erro: Arquivo nao encontrado: {file_path}")
         return
+
+    source_file = Path(file_path).name
 
     print(f"Lendo e extraindo texto de: {file_path}...")
     try:
@@ -79,23 +84,24 @@ def upload_material(topic: str, file_path: str):
         print(f"OK: Texto extraido ({len(content)} caracteres). Enviando para o Supabase...")
         
         client = _get_client()
-        # Upsert: se ja existir o topico, atualiza. Se nao, insere.
         data = {
             "macro_topic": topic,
+            "source_file": source_file,
             "content": content,
             "updated_at": "now()"
         }
         
-        # O Supabase Python client nao tem um 'upsert' direto tao simples quanto o JS em todas as versoes,
-        # entao vamos tentar inserir e se der erro de chave duplicada, atualizamos.
         try:
-            resp = client.table("tutor_materials").upsert(data, on_conflict="macro_topic").execute()
-            print(f"Sucesso! Material para '{topic}' foi salvo no banco de dados.")
+            resp = client.table("tutor_materials").upsert(
+                data, on_conflict="macro_topic,source_file"
+            ).execute()
+            print(f"Sucesso! Material '{source_file}' para '{topic}' salvo no banco.")
         except Exception as e:
             print(f"Erro ao salvar no banco: {e}")
 
     except Exception as e:
         print(f"Falha na extracao/upload: {e}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Upload de material de estudo para o Tutor ABP")

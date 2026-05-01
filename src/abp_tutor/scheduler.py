@@ -43,9 +43,9 @@ def get_day_for_date(target_date: date) -> Optional[Dict[str, Any]]:
         
     for day in cronograma["days"]:
         if day["day_index"] == day_index:
-            # Add targets to the day dict
-            day["questions_target"] = cronograma["default_questions_target"]
-            day["flashcards_target"] = cronograma["default_flashcards_target"]
+            # Usa targets personalizados se existirem, senão usa os defaults
+            day["questions_target"] = day.get("questions_target", cronograma["default_questions_target"])
+            day["flashcards_target"] = day.get("flashcards_target", cronograma["default_flashcards_target"])
             return day
             
     return None
@@ -59,6 +59,7 @@ def render_user_prompt(
     weak: list,
     compliance_yesterday: Optional[Dict[str, Any]],
     reference_material: Optional[str] = None,
+    review_topics: Optional[list] = None,
 ) -> str:
     """Preenche o template com os dados dinâmicos."""
     template = load_user_template()
@@ -83,14 +84,20 @@ def render_user_prompt(
         t_read = "Sem dados (primeiro dia ou falha no registro)"
 
     if reference_material:
-        # Limita o tamanho do material de referência por segurança (ex: 30000 caracteres)
-        safe_material = reference_material[:30000]
         reference_material_section = f"""# Material Base do Aluno
 Utilize o material de referência abaixo como a base ARGUMENTATIVA e de CONTEÚDO PRINCIPAL para a sua revisão. Os diferenciais críticos e armadilhas de prova devem ser extraídos prioritariamente daqui.
 
-{safe_material}"""
+{reference_material}"""
     else:
         reference_material_section = ""
+
+    if review_topics:
+        topics_str = ", ".join(review_topics)
+        review_section = f"""# Revisão Espaçada
+Os seguintes temas anteriores estão com desempenho FRACO: {topics_str}.
+Inclua 2-3 flashcards EXTRAS de revisão desses temas (além dos flashcards do tema de hoje). Marque-os com [REVISÃO] no início da pergunta."""
+    else:
+        review_section = ""
 
     return template.format(
         day_index=day_plan["day_index"],
@@ -99,6 +106,7 @@ Utilize o material de referência abaixo como a base ARGUMENTATIVA e de CONTEÚD
         macro_topic=day_plan["macro_topic"],
         subtopics_bullets=subtopics_bullets,
         reference_material_section=reference_material_section,
+        review_section=review_section,
         accuracy_by_topic_json=acc_json,
         weak_areas_json=weak_json,
         questions_done_yesterday=q_done,

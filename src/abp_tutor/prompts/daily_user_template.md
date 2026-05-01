@@ -8,6 +8,8 @@ Hoje é o dia {day_index} de 30 da preparação. Data: {plan_date}. Faltam {days
 
 {reference_material_section}
 
+{review_section}
+
 # Dados de desempenho (últimos 7 dias)
 - Acertos por tópico: {accuracy_by_topic_json}
 - Top 3 áreas de fraqueza: {weak_areas_json}
@@ -29,6 +31,6 @@ Gere o material do dia. Responda **somente** com um objeto JSON válido (sem mar
 
 Restrições:
 - text_md entre 800 e 1500 palavras
-- flashcards: entre 8 e 12 itens
+- flashcards: entre 5 e 15 itens (priorize qualidade sobre quantidade)
 - priority_areas: exatamente 2 áreas, escolhidas considerando as fraquezas reportadas
 - nudge: se aderência ontem foi alta, reconheça brevemente e suba a régua. Se foi baixa, seja firme sem moralismo. Se foi dia 1, dê tom de partida.

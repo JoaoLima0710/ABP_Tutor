@@ -150,14 +150,87 @@ def get_flashcards_done_yesterday(reference: date) -> int:
             
     return total
 
-def get_material_for_topic(macro_topic: str) -> str | None:
-    """Busca o material de estudo personalizado do usuário para um determinado macro tema."""
+def get_material_for_topic(macro_topic: str, max_chars: int = 50000) -> str | None:
+    """
+    Busca TODOS os materiais de estudo do usuário para um macro tema,
+    concatena-os com separadores e aplica truncamento inteligente.
+    """
     client = _get_client()
     try:
-        resp = client.table("tutor_materials").select("content").eq("macro_topic", macro_topic).limit(1).execute()
-        if resp.data and len(resp.data) > 0:
-            return resp.data[0]["content"]
+        resp = (
+            client.table("tutor_materials")
+            .select("source_file, content")
+            .eq("macro_topic", macro_topic)
+            .order("char_count", desc=True)  # materiais maiores (tratados) primeiro
+            .execute()
+        )
+        if not resp.data:
+            return None
+
+        parts = []
+        total_chars = 0
+        for row in resp.data:
+            source = row.get("source_file", "desconhecido")
+            content = row.get("content", "")
+            if not content:
+                continue
+
+            # Se já estourou o limite, para de adicionar
+            if total_chars + len(content) > max_chars:
+                remaining = max_chars - total_chars
+                if remaining > 500:  # só adiciona se sobrar espaço útil
+                    content = _smart_truncate(content, remaining)
+                    parts.append(f"--- Fonte: {source} (parcial) ---\n{content}")
+                break
+
+            parts.append(f"--- Fonte: {source} ---\n{content}")
+            total_chars += len(content)
+
+        return "\n\n".join(parts) if parts else None
+
     except Exception as e:
         logger.warning(f"Erro ao buscar material para o tópico '{macro_topic}': {e}")
     return None
+
+
+def _smart_truncate(text: str, max_chars: int) -> str:
+    """
+    Trunca o texto de forma inteligente, priorizando manter seções
+    sobre diagnóstico, tratamento e farmacologia (mais cobradas em prova).
+    """
+    if len(text) <= max_chars:
+        return text
+
+    # Divide por parágrafos
+    paragraphs = text.split("\n\n")
+
+    # Palavras-chave de alta prioridade para prova
+    high_priority_keywords = [
+        "diagnóstico", "diagnos", "tratamento", "primeira linha",
+        "farmaco", "dose", "mecanismo", "critério", "DSM", "CID",
+        "diferencial", "armadilha", "prova", "clozapina", "lítio",
+        "efeito adverso", "contraindicação", "manejo"
+    ]
+
+    priority_paragraphs = []
+    normal_paragraphs = []
+
+    for p in paragraphs:
+        p_lower = p.lower()
+        if any(kw in p_lower for kw in high_priority_keywords):
+            priority_paragraphs.append(p)
+        else:
+            normal_paragraphs.append(p)
+
+    # Monta o resultado priorizando parágrafos relevantes
+    result_parts = []
+    current_len = 0
+
+    for p in priority_paragraphs + normal_paragraphs:
+        if current_len + len(p) + 2 > max_chars:
+            break
+        result_parts.append(p)
+        current_len += len(p) + 2
+
+    return "\n\n".join(result_parts)
 

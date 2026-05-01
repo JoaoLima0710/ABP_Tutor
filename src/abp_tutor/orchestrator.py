@@ -66,10 +66,15 @@ def main() -> int:
             
             q_done = db_app.get_questions_done_yesterday(yesterday)
             fc_done = db_app.get_flashcards_done_yesterday(yesterday)
+            
+            # Verifica compliance real (se disponível)
+            real_compliance = db_state.get_compliance(yesterday)
+            text_read = real_compliance.get("text_read", False) if real_compliance else False
+            
             compliance_yesterday = {
                 "questions_done": q_done,
                 "flashcards_done": fc_done,
-                "text_read": True # Assumindo true para simplificar
+                "text_read": text_read
             }
         except Exception as e:
             logger.warning(f"Falha ao ler dados do app, prosseguindo com zerados: {e}")
@@ -77,6 +82,11 @@ def main() -> int:
 
         # 2.5 Busca material de referência opcional
         ref_material = db_app.get_material_for_topic(day_plan["macro_topic"])
+
+        # 2.6 Revisão espaçada: busca temas anteriores fracos para flashcards de revisão
+        review_topics = []
+        if day_plan["day_index"] > 3 and weak:
+            review_topics = [w.get("topic", "") for w in weak[:2] if w.get("topic")]
 
         # 3. Monta prompts
         system_prompt = scheduler.load_system_prompt()
@@ -88,6 +98,7 @@ def main() -> int:
             weak=weak,
             compliance_yesterday=compliance_yesterday,
             reference_material=ref_material,
+            review_topics=review_topics,
         )
 
         # 4. Chama POE

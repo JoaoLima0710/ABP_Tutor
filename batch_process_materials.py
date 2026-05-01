@@ -11,10 +11,6 @@ if sys.platform == "win32":
     except AttributeError:
         pass
 
-
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8')
-
 from upload_material import upload_material
 
 def load_topics():

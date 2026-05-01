@@ -105,6 +105,21 @@ def _validate_payload(data: dict) -> None:
          
     if not (5 <= len(data["flashcards"]) <= 15):
         raise ValueError(f"flashcards fora da faixa 5-15 (veio {len(data['flashcards'])})")
+    
+    # Valida estrutura individual de cada flashcard
+    for i, fc in enumerate(data["flashcards"]):
+        if not isinstance(fc, dict):
+            raise ValueError(f"flashcard[{i}] não é um objeto")
+        if "q" not in fc or "a" not in fc:
+            # Tenta corrigir formatos alternativos comuns
+            if "question" in fc and "answer" in fc:
+                fc["q"] = fc.pop("question")
+                fc["a"] = fc.pop("answer")
+            elif "pergunta" in fc and "resposta" in fc:
+                fc["q"] = fc.pop("pergunta")
+                fc["a"] = fc.pop("resposta")
+            else:
+                raise ValueError(f"flashcard[{i}] sem chaves 'q' e 'a': {list(fc.keys())}")
         
     if not isinstance(data["priority_areas"], list) or len(data["priority_areas"]) != 2:
         raise ValueError("priority_areas precisa ter exatamente 2 itens")

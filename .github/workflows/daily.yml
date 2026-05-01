@@ -9,7 +9,7 @@ on:
 jobs:
   run-tutor:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,7 +25,7 @@ jobs:
       - name: Run orchestrator
         env:
           POE_API_KEY: ${{ secrets.POE_API_KEY }}
-          POE_BOT_NAME: ${{ vars.POE_BOT_NAME || 'DSM5-ABP-Tutor' }}
+          POE_BOT_NAME: ${{ secrets.POE_BOT_NAME || vars.POE_BOT_NAME || 'abp_tutor' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

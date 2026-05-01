@@ -1,16 +1,9 @@
 from datetime import date
 from typing import Dict, Any, Optional
 
-from supabase import create_client, Client
-from pydantic import BaseModel
-
+from abp_tutor.db_app import _get_client
 from abp_tutor.config import get_settings
 from abp_tutor.logging_setup import logger
-
-
-def _get_client() -> Client:
-    settings = get_settings()
-    return create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
 
 
 def start_run(plan_date: date) -> int:

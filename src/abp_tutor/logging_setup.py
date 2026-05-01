@@ -34,16 +34,30 @@ class JSONFormatter(logging.Formatter):
 
 def setup_logging(level: str = "INFO") -> logging.Logger:
     """Configura e retorna o logger raiz do pacote."""
-    logger = logging.getLogger("abp_tutor")
-    if logger.handlers:
-        return logger  # já configurado
+    _logger = logging.getLogger("abp_tutor")
+    if _logger.handlers:
+        return _logger  # já configurado
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JSONFormatter())
-    logger.addHandler(handler)
-    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    logger.propagate = False
-    return logger
+    _logger.addHandler(handler)
+    _logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    _logger.propagate = False
+    return _logger
 
 
-logger = setup_logging()
+def _get_logger() -> logging.Logger:
+    """Retorna o logger, configurando com o nível do settings se disponível."""
+    _logger = logging.getLogger("abp_tutor")
+    if not _logger.handlers:
+        try:
+            from abp_tutor.config import get_settings
+            level = get_settings().LOG_LEVEL
+        except Exception:
+            level = "INFO"
+        setup_logging(level)
+    return _logger
+
+
+# Acesso direto — setup lazy no primeiro uso
+logger = _get_logger()
