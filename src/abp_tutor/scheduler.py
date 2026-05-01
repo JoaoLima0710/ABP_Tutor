@@ -99,6 +99,16 @@ Inclua 2-3 flashcards EXTRAS de revisão desses temas (além dos flashcards do t
     else:
         review_section = ""
 
+    # Neurociências: só inclui para temas clinicamente relevantes
+    neuro_relevant = day_plan.get("neuro_relevant", False)
+    if neuro_relevant:
+        neuro_section = """# Instrução de Neurociências
+incluir_neuro: true
+Inclua obrigatoriamente a seção de Neurociências e Neuroanatomia Funcional no text_md, conforme descrito no system prompt. Cubra: circuitos cerebrais, neurotransmissores-chave, achados de neuroimagem (RM, PET, fMRI) e correlação clínica.
+Inclua também 2-3 flashcards marcados com [NEURO] sobre neuroanatomia funcional e neuroimagem do tema de hoje."""
+    else:
+        neuro_section = "incluir_neuro: false"
+
     return template.format(
         day_index=day_plan["day_index"],
         plan_date=today.strftime("%d/%m/%Y"),
@@ -107,6 +117,7 @@ Inclua 2-3 flashcards EXTRAS de revisão desses temas (além dos flashcards do t
         subtopics_bullets=subtopics_bullets,
         reference_material_section=reference_material_section,
         review_section=review_section,
+        neuro_section=neuro_section,
         accuracy_by_topic_json=acc_json,
         weak_areas_json=weak_json,
         questions_done_yesterday=q_done,

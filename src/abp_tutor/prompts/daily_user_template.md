@@ -10,6 +10,8 @@ Hoje é o dia {day_index} de 30 da preparação. Data: {plan_date}. Faltam {days
 
 {review_section}
 
+{neuro_section}
+
 # Dados de desempenho (últimos 7 dias)
 - Acertos por tópico: {accuracy_by_topic_json}
 - Top 3 áreas de fraqueza: {weak_areas_json}
