@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # ── POE ──
     POE_API_KEY: str
-    POE_BOT_NAME: str = "DSM5-ABP-Tutor"
+    POE_BOT_NAME: str = "abp_tutor"
 
     # ── Telegram ──
     TELEGRAM_BOT_TOKEN: str

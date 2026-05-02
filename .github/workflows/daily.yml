@@ -4,6 +4,8 @@ on:
   schedule:
     # 06:30 America/Sao_Paulo = 09:30 UTC
     - cron: '30 9 * * *'
+    # 12:00 America/Sao_Paulo = 15:00 UTC (backup se o primeiro falhar)
+    - cron: '0 15 * * *'
   workflow_dispatch:  # permite rodar manualmente
 
 jobs:
@@ -37,3 +39,13 @@ jobs:
           TIMEZONE: America/Sao_Paulo
           LOG_LEVEL: INFO
         run: python -m abp_tutor.orchestrator
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=⚠️ Tutor ABP falhou no workflow! Verifique: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

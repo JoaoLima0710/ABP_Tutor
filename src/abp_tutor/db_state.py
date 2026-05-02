@@ -71,7 +71,10 @@ def mark_delivered(plan_id: int) -> None:
 def get_compliance(plan_date: date) -> Optional[Dict[str, Any]]:
     """Busca aderência de uma data específica."""
     client = _get_client()
-    resp = client.table("tutor_daily_compliance").select("*").eq("plan_date", plan_date.isoformat()).execute()
-    if resp.data:
-        return resp.data[0]
+    try:
+        resp = client.table("tutor_daily_compliance").select("*").eq("plan_date", plan_date.isoformat()).execute()
+        if resp.data:
+            return resp.data[0]
+    except Exception as e:
+        logger.warning(f"Erro ao buscar compliance para {plan_date}: {e}")
     return None

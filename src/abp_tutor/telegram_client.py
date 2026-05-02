@@ -1,5 +1,6 @@
 import re
 import os
+import time
 import tempfile
 from datetime import date
 from typing import Dict, Any, List
@@ -11,41 +12,52 @@ from abp_tutor.config import get_settings
 from abp_tutor.logging_setup import logger
 
 MAX_TELEGRAM_MESSAGE_LENGTH = 4096
-
-
-def _md_to_html(text: str) -> str:
-    """Converte Markdown simplificado para HTML do Telegram."""
-    # Bold: **text** → <b>text</b>
-    text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
-    # Italic: *text* or _text_ → <i>text</i>
-    text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', text)
-    text = re.sub(r'_(.+?)_', r'<i>\1</i>', text)
-    # Code: `text` → <code>text</code>
-    text = re.sub(r'`(.+?)`', r'<code>\1</code>', text)
-    # Headers: ## text → <b>text</b> com newline
-    text = re.sub(r'^#{1,4}\s+(.+)$', r'<b>\1</b>', text, flags=re.MULTILINE)
-    # Escape HTML special chars that aren't part of our tags
-    # (must be done carefully to not break our own tags)
-    return text
+TELEGRAM_SEND_DELAY = 0.5  # segundos entre mensagens para garantir ordem
 
 
 def _escape_html(text: str) -> str:
-    """Escapa caracteres HTML, preservando tags que nós mesmos inserimos."""
+    """Escapa caracteres especiais do HTML."""
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")
     text = text.replace(">", "&gt;")
     return text
 
 
+def _md_to_html(text: str) -> str:
+    """
+    Converte Markdown simplificado para HTML do Telegram.
+    IMPORTANTE: escapa HTML ANTES de converter, para que caracteres como
+    < > no texto original não sejam interpretados como tags.
+    """
+    # 1. Primeiro escapa todos os caracteres HTML perigosos
+    text = _escape_html(text)
+
+    # 2. Depois converte markdown → tags HTML do Telegram
+    # Bold: **text** → <b>text</b>
+    text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
+    # Italic: *text* → <i>text</i>  (depois de bold para não conflitar)
+    text = re.sub(r'\*(.+?)\*', r'<i>\1</i>', text)
+    # Underline italic: _text_ → <i>text</i>
+    text = re.sub(r'_(.+?)_', r'<i>\1</i>', text)
+    # Code: `text` → <code>text</code>
+    text = re.sub(r'`(.+?)`', r'<code>\1</code>', text)
+    # Headers: ## text → <b>text</b> com newline
+    text = re.sub(r'^#{1,4}\s+(.+)$', r'<b>\1</b>', text, flags=re.MULTILINE)
+    # Bullet points: - text → • text
+    text = re.sub(r'^- (.+)$', r'• \1', text, flags=re.MULTILINE)
+
+    return text
+
+
 def _split_message(text: str) -> List[str]:
-    """Splits a long text into chunks respecting Telegram's limit."""
+    """Divide texto longo em chunks respeitando o limite do Telegram."""
     if len(text) <= MAX_TELEGRAM_MESSAGE_LENGTH:
         return [text]
-        
+
     paragraphs = text.split('\n\n')
     chunks = []
     current_chunk = ""
-    
+
     for paragraph in paragraphs:
         if len(current_chunk) + len(paragraph) + 2 <= MAX_TELEGRAM_MESSAGE_LENGTH:
             if current_chunk:
@@ -67,24 +79,24 @@ def _split_message(text: str) -> List[str]:
                 if current_chunk:
                     chunks.append(current_chunk)
                 current_chunk = paragraph
-                
+
     if current_chunk:
         chunks.append(current_chunk)
-        
+
     return chunks
 
 
 def _send_text(text: str, parse_mode: str = "HTML") -> None:
     settings = get_settings()
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-    
+
     payload = {
         "chat_id": settings.TELEGRAM_CHAT_ID,
         "text": text,
         "parse_mode": parse_mode,
         "disable_web_page_preview": True
     }
-    
+
     with httpx.Client(timeout=30.0) as client:
         resp = client.post(url, json=payload)
         try:
@@ -104,10 +116,16 @@ def _send_text(text: str, parse_mode: str = "HTML") -> None:
                 raise
 
 
+def _send_text_with_delay(text: str, parse_mode: str = "HTML") -> None:
+    """Envia texto e aguarda para garantir ordem de entrega."""
+    _send_text(text, parse_mode)
+    time.sleep(TELEGRAM_SEND_DELAY)
+
+
 def _send_pdf(pdf_path: str, filename: str) -> None:
     settings = get_settings()
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendDocument"
-    
+
     data = {"chat_id": settings.TELEGRAM_CHAT_ID}
     with open(pdf_path, "rb") as f:
         files = {"document": (filename, f, "application/pdf")}
@@ -135,12 +153,12 @@ def send_daily_package(plan_date: date, day_plan: Dict[str, Any], tutor_result: 
     """Envia o pacote completo formatado e segmentado para o Telegram."""
     settings = get_settings()
     days_to_exam = (settings.EXAM_DATE - plan_date).days
-    
+
     subtopics = ", ".join(day_plan["subtopics"])
     nudge_text = _escape_html(tutor_result.get("nudge", ""))
     macro_topic = _escape_html(day_plan["macro_topic"])
     subtopics_escaped = _escape_html(subtopics)
-    
+
     # 1. Cabecalho
     header = (
         f"📚 <b>Dia {day_plan['day_index']}/30 — Tutor ABP</b>\n"
@@ -153,29 +171,29 @@ def send_daily_package(plan_date: date, day_plan: Dict[str, Any], tutor_result: 
         f"• Texto de revisao (abaixo)\n\n"
         f"💬 <i>{nudge_text}</i>"
     )
-    _send_text(header)
-    
+    _send_text_with_delay(header)
+
     # 2. Texto de Revisao (convertido de MD para HTML)
     text_html = _md_to_html(tutor_result["text_md"])
     chunks = _split_message(text_html)
     for chunk in chunks:
-        _send_text(chunk)
-        
+        _send_text_with_delay(chunk)
+
     # 3. Priority Areas
     p_items = "\n".join([f"• {_escape_html(a)}" for a in tutor_result["priority_areas"]])
     p_text = f"🚨 <b>Foco nas Questoes de Hoje</b>\nSua prioridade no banco de questoes deve ser:\n{p_items}"
-    _send_text(p_text)
-    
+    _send_text_with_delay(p_text)
+
     # 4. Flashcards
     fc_text = "💡 <b>Flashcards do Dia</b>\n\n"
     for i, fc in enumerate(tutor_result["flashcards"]):
         q = _escape_html(fc["q"])
         a = _escape_html(fc["a"])
         fc_text += f"❓ <b>{i+1}. {q}</b>\n👉 <i>{a}</i>\n\n"
-        
+
     fc_chunks = _split_message(fc_text.strip())
     for chunk in fc_chunks:
-        _send_text(chunk)
+        _send_text_with_delay(chunk)
 
     # 5. Gerar PDF para impressao
     try:
@@ -193,15 +211,15 @@ def send_daily_package(plan_date: date, day_plan: Dict[str, Any], tutor_result: 
         pdf_md += "## Flashcards\n\n"
         for i, fc in enumerate(tutor_result["flashcards"]):
             pdf_md += f"**{i+1}. {fc['q']}**\n\n_{fc['a']}_\n\n"
-            
+
         pdf = MarkdownPdf(toc_level=0)
         pdf.add_section(Section(pdf_md))
-        
+
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp_path = tmp.name
-        
+
         pdf.save(tmp_path)
-        
+
         _send_pdf(tmp_path, f"Resumo_ABP_Dia_{day_plan['day_index']}.pdf")
         os.unlink(tmp_path)
     except Exception as e:

@@ -1,4 +1,5 @@
 import argparse
+import time as _time
 from datetime import date, timedelta
 import sys
 
@@ -102,7 +103,10 @@ def main() -> int:
         )
 
         # 4. Chama POE
+        t_start = _time.time()
         result = tutor.generate_daily_content(system_prompt, user_prompt)
+        generation_secs = round(_time.time() - t_start, 1)
+        logger.info(f"Conteudo gerado em {generation_secs}s", extra={"generation_time": generation_secs})
 
         # 5. Persiste e Envia
         if args.dry_run:
