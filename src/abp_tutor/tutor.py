@@ -8,6 +8,50 @@ from abp_tutor.config import get_settings
 from abp_tutor.logging_setup import logger
 
 
+def _extract_json_object(text: str) -> str:
+    """
+    Extrai o primeiro objeto JSON completo do texto.
+    Resolve o erro 'Extra data' quando a IA adiciona comentários após o }.
+    """
+    # Encontra o primeiro {
+    start = text.find("{")
+    if start == -1:
+        return text
+    
+    # Conta chaves para encontrar o } correspondente
+    depth = 0
+    in_string = False
+    escape_next = False
+    
+    for i in range(start, len(text)):
+        char = text[i]
+        
+        if escape_next:
+            escape_next = False
+            continue
+            
+        if char == '\\' and in_string:
+            escape_next = True
+            continue
+            
+        if char == '"' and not escape_next:
+            in_string = not in_string
+            continue
+            
+        if in_string:
+            continue
+            
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1]
+    
+    # Se não encontrou o fechamento, retorna tudo do { em diante
+    return text[start:]
+
+
 def generate_daily_content(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """
     Chama a API do POE (OpenAI-compatible) e devolve dict validado
@@ -69,6 +113,9 @@ def generate_daily_content(system_prompt: str, user_prompt: str) -> Dict[str, An
                     if lines and lines[-1].startswith("```"):
                         lines = lines[:-1]
                     raw_text = "\n".join(lines).strip()
+                
+                # Extrai apenas o objeto JSON (ignora texto extra antes/depois)
+                raw_text = _extract_json_object(raw_text)
                     
                 parsed = json.loads(raw_text)
                 _validate_payload(parsed)
