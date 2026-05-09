@@ -3,10 +3,6 @@ Hoje é o dia {day_index} de 37 da preparação. Data: {plan_date}. Faltam {days
 # Macro-tema do dia
 {macro_topic}
 
-# Aulas de referência do curso ABP
-{aulas_codigos_str}
-(Estes códigos seguem o padrão `M<módulo> A<aula>` do índice de aulas. Cite-os explicitamente no `text_md` quando referenciar conteúdo da aula correspondente. O aluno usa esses códigos para acionar a skill de revisão impressa.)
-
 # Subtópicos
 {subtopics_bullets}
 

@@ -37,7 +37,6 @@ def test_render_user_prompt():
         "day_index": 10,
         "macro_topic": "Ansiedade",
         "subtopics": ["TAG", "Pânico"],
-        "aulas_codigos": ["M3 A7", "M4 A3"],
         "questions_target": 30,
         "flashcards_target": 20
     }
@@ -54,5 +53,7 @@ def test_render_user_prompt():
     assert "Ansiedade" in prompt
     assert "TAG" in prompt
     assert "Pânico" in prompt
-    assert "M3 A7" in prompt
-    assert "M4 A3" in prompt
+    # Códigos M*A* são internos (locator de arquivos do Claude Code) — nunca devem
+    # ser injetados explicitamente como seção do prompt do tutor remoto.
+    assert "Aulas de referência" not in prompt
+    assert "aulas_codigos" not in prompt

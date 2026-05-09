@@ -66,8 +66,6 @@ def render_user_prompt(
     
     days_to_exam = (exam_date - today).days
     subtopics_bullets = "\n".join(f"- {s}" for s in day_plan["subtopics"])
-    aulas_codigos = day_plan.get("aulas_codigos", [])
-    aulas_codigos_str = ", ".join(aulas_codigos) if aulas_codigos else "(sem aula específica — revisão transversal)"
     
     acc_json = json.dumps(accuracy, ensure_ascii=False) if accuracy else "[]"
     weak_json = json.dumps(weak, ensure_ascii=False) if weak else "[]"
@@ -116,7 +114,6 @@ Inclua também 2-3 flashcards marcados com [NEURO] sobre neuroanatomia funcional
         plan_date=today.strftime("%d/%m/%Y"),
         days_to_exam=days_to_exam,
         macro_topic=day_plan["macro_topic"],
-        aulas_codigos_str=aulas_codigos_str,
         subtopics_bullets=subtopics_bullets,
         reference_material_section=reference_material_section,
         review_section=review_section,
