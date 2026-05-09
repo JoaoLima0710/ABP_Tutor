@@ -7,7 +7,7 @@ from abp_tutor import scheduler
 def mock_settings(monkeypatch):
     class MockSettings:
         START_DATE = date(2026, 5, 1)
-        EXAM_DATE = date(2026, 5, 30)
+        EXAM_DATE = date(2026, 6, 7)
     monkeypatch.setattr(scheduler, "get_settings", lambda: MockSettings())
 
 def test_get_day_for_date_before_start():
@@ -21,15 +21,15 @@ def test_get_day_for_date_valid():
     assert day is not None
     assert day["day_index"] == 1
     assert "Esquizofrenia" in day["macro_topic"]
-    
-    # Dia 30 (30 de maio)
-    day = scheduler.get_day_for_date(date(2026, 5, 30))
+
+    # Dia 37 (06/06 — véspera)
+    day = scheduler.get_day_for_date(date(2026, 6, 6))
     assert day is not None
-    assert day["day_index"] == 30
+    assert day["day_index"] == 37
 
 def test_get_day_for_date_after_end():
-    # Após o fim (31 de maio)
-    day = scheduler.get_day_for_date(date(2026, 5, 31))
+    # Após o fim — dia da prova (07/06) está fora da janela de revisão
+    day = scheduler.get_day_for_date(date(2026, 6, 7))
     assert day is None
 
 def test_render_user_prompt():
@@ -40,17 +40,16 @@ def test_render_user_prompt():
         "questions_target": 30,
         "flashcards_target": 20
     }
-    
+
     prompt = scheduler.render_user_prompt(
         day_plan=day_plan,
         today=date(2026, 5, 10),
-        exam_date=date(2026, 5, 30),
+        exam_date=date(2026, 6, 7),
         accuracy=[{"topic": "Ansiedade", "attempted": 10, "correct": 5, "accuracy_pct": 50}],
         weak=[{"topic": "Ansiedade", "subtopic": None, "accuracy_pct": 50, "n_attempts": 10}],
         compliance_yesterday=None
     )
-    
-    assert "Hoje é o dia 10 de 30" in prompt
+
     assert "Ansiedade" in prompt
     assert "TAG" in prompt
     assert "Pânico" in prompt

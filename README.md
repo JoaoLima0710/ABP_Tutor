@@ -63,6 +63,6 @@ Como o orquestrador não tem banco de dados próprio, usamos o seu Supabase exis
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
 4. Em **Repository variables**, adicione:
-   - `EXAM_DATE` (ex: `2026-05-30`)
+   - `EXAM_DATE` (ex: `2026-06-07`)
    - `START_DATE` (ex: `2026-05-01`)
 5. Vá na aba **Actions** e você pode rodar o "Daily Tutor Run" manualmente clicando em "Run workflow", ou esperar ele rodar automaticamente às 06:30 da manhã do Brasil.

@@ -1,7 +1,7 @@
 {
-  "version": "5.0",
+  "version": "5.1",
   "exam_name": "Prova de Título ABP",
-  "total_days": 30,
+  "total_days": 37,
   "default_questions_target": 30,
   "default_flashcards_target": 20,
   "days": [
@@ -34,6 +34,13 @@
     { "day_index": 27, "date": "27/05", "macro_topic": "REVISÃO 2 — Ansiedade + OCD + Trauma + Alimentares", "subtopics": ["Simulado cronometrado (50 questões)"], "weight": "alto", "questions_target": 50, "flashcards_target": 0, "neuro_relevant": false },
     { "day_index": 28, "date": "28/05", "macro_topic": "REVISÃO 3 — Substâncias + Sono + Impulsos + Somáticos", "subtopics": ["Simulado cronometrado (50 questões)"], "weight": "alto", "questions_target": 50, "flashcards_target": 0, "neuro_relevant": false },
     { "day_index": 29, "date": "29/05", "macro_topic": "REVISÃO 4 — Neurocognitivo + Personalidade + Neurodesenvolvimento", "subtopics": ["Simulado cronometrado (50 questões)"], "weight": "alto", "questions_target": 50, "flashcards_target": 0, "neuro_relevant": false },
-    { "day_index": 30, "date": "30/05", "macro_topic": "REVISÃO FINAL — Neurociência + Forense + Transversais", "subtopics": ["Releitura de TODOS os flashcards"], "weight": "alto", "questions_target": 0, "flashcards_target": 100, "neuro_relevant": false }
+    { "day_index": 30, "date": "30/05", "macro_topic": "REVISÃO FINAL — Neurociência + Forense + Transversais", "subtopics": ["Releitura de TODOS os flashcards"], "weight": "alto", "questions_target": 0, "flashcards_target": 100, "neuro_relevant": false },
+    { "day_index": 31, "date": "31/05", "macro_topic": "REVISÃO 5 — Substâncias + Urgências + Suicídio", "subtopics": ["Simulado cronometrado (50 questões)", "manejo de agitação", "contenção"], "weight": "alto", "questions_target": 50, "flashcards_target": 10, "neuro_relevant": false },
+    { "day_index": 32, "date": "01/06", "macro_topic": "REVISÃO 6 — Personalidade + Infantojuvenil", "subtopics": ["Borderline", "TEA", "TDAH", "Tourette"], "weight": "alto", "questions_target": 40, "flashcards_target": 15, "neuro_relevant": true },
+    { "day_index": 33, "date": "02/06", "macro_topic": "REVISÃO 7 — Neurociências + Psicofarmacologia geral", "subtopics": ["Receptores", "neurotransmissores", "CYP", "interações"], "weight": "alto", "questions_target": 40, "flashcards_target": 15, "neuro_relevant": true },
+    { "day_index": 34, "date": "03/06", "macro_topic": "REVISÃO 8 — Forense + Ética + Saúde pública", "subtopics": ["Lei 10.216", "RAPS", "imputabilidade", "ética médica"], "weight": "alto", "questions_target": 40, "flashcards_target": 10, "neuro_relevant": false },
+    { "day_index": 35, "date": "04/06", "macro_topic": "REVISÃO 9 — DSM-5 + CID-11 + Diagnóstico diferencial", "subtopics": ["Critérios", "especificadores", "diferenciais críticos"], "weight": "alto", "questions_target": 40, "flashcards_target": 15, "neuro_relevant": false },
+    { "day_index": 36, "date": "05/06", "macro_topic": "T-2 — Varredura final dos pontos fracos", "subtopics": ["Foco nos temas com pior desempenho histórico", "armadilhas de prova"], "weight": "alto", "questions_target": 50, "flashcards_target": 30, "neuro_relevant": false },
+    { "day_index": 37, "date": "06/06", "macro_topic": "VÉSPERA — Repouso ativo + flashcards", "subtopics": ["Apenas releitura de flashcards de erros", "sem novos conteúdos", "checklist de logística para 07/06"], "weight": "alto", "questions_target": 0, "flashcards_target": 50, "neuro_relevant": false }
   ]
 }
